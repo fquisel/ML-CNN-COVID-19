@@ -13,7 +13,7 @@ class FlaskTestCase(unittest.TestCase):
 
     # Comprobar si la función hacer_predicciones devuelve una salida válida
     def test_hacer_predicciones(self):
-        img_dir = 'static/imagen_prueba.jpg'
+        img_dir = 'static/NEGATIVO (1).png'
         img_arr = cv2.imread(img_dir, cv2.IMREAD_GRAYSCALE)
         resized_arr = cv2.resize(img_arr, (150, 150))
         output = hacer_predicciones(resized_arr)
