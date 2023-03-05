@@ -9,7 +9,7 @@ app = Flask(__name__)
 labels = ['POSITIVO', 'NEGATIVO']
 img_size = 150
 
-model = load_model('modelo.h5')
+model = load_model('model_t1.h5')
 
 def carga_img(data_dir):
     data = [] 
