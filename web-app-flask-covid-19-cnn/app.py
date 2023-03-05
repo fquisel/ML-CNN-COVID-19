@@ -1,17 +1,34 @@
 import numpy as np
+import os
+import cv2
 from flask import Flask, render_template, request
-from keras.models import load_model
-from tensorflow.keras.preprocessing import image
-
-#pip install keras, flask, pillow
-#https://colab.research.google.com/drive/1w80SlhJchdJ7Dmi8HmifdxxL-X2hcV2-?usp=sharing
+from tensorflow.keras.models import load_model
 
 app = Flask(__name__)
 
-dic = {0 : 'Positivo', 1 : 'Negativo'}
+labels = ['POSITIVO', 'NEGATIVO']
+img_size = 150
 
-model = load_model('model_t1.h5')
-model.make_predict_function()
+model = load_model('modelo.h5')
+
+def carga_img(data_dir):
+    data = [] 
+    for label in labels: 
+        path = os.path.join(data_dir, label)
+        class_num = labels.index(label)
+        for img in os.listdir(path):
+            try:
+                img_arr = cv2.imread(os.path.join(path, img), cv2.IMREAD_GRAYSCALE)
+                resized_arr = cv2.resize(img_arr, (img_size, img_size))
+                data.append([resized_arr, class_num])
+            except Exception as e:
+                print(e)
+    return np.array(data)
+
+def hacer_predicciones(img):
+    img = np.reshape(img, (1, img_size, img_size, 1))
+    pred = model.predict(img)
+    return labels[np.argmax(pred)]
 
 @app.route("/", methods=['GET'])
 def main():
@@ -21,15 +38,9 @@ def main():
 def prediccion():
     img = request.files['img']
     img_dir = 'static/' + img.filename
-    img.save(img_dir)
-    i = image.load_img(img_dir, target_size=(150,150))
-    i = image.img_to_array(i)/255.0
-    i = i.reshape(-1,i.shape[0],i.shape[1],1)
-    pred = np.argmax(model.predict(i), axis=-1)
-    #pred = model.predict_classes(i)
-    #pred = pred.reshape(1,-1)[0]
-    label = dic[pred[0]]
-    #label = '%s (%.2f%%)' % (dic[pred[0]],pred[2]*100)
+    img_arr = cv2.imdecode(np.fromstring(img.read(), np.uint8), cv2.IMREAD_GRAYSCALE)
+    resized_arr = cv2.resize(img_arr, (img_size, img_size))
+    label = hacer_predicciones(resized_arr)
     return render_template("index.html", prediccion = label, imagen = img_dir)
 
 if __name__ == '__main__':
